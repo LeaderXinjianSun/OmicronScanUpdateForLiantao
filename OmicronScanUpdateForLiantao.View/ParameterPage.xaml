@@ -1,0 +1,53 @@
+﻿<UserControl x:Class="OmicronScanUpdateForLiantao.View.ParameterPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:OmicronScanUpdateForLiantao.View"
+             xmlns:mvvm="clr-namespace:BingLibrary.hjb;assembly=BingLibrary"     
+             mc:Ignorable="d" 
+             d:DesignHeight="536" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="SxjDictionary.xaml"></ResourceDictionary>
+                <!--<ResourceDictionary Source="Resources/Icons.xaml"></ResourceDictionary>-->
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <GroupBox Header="PLC">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="串口"></TextBlock>
+                    <ComboBox Style="{StaticResource ComboBoxBase}" x:Name="Com" Text="{Binding PLCPortCom}" IsEditable="True" IsReadOnly="True" DropDownOpened="Com_DropDownOpened"></ComboBox>
+                </StackPanel>
+                <TextBlock Text="波特率： 19200&#13;数据位： 8&#13;停止位： 1&#13;奇偶校验： Even"></TextBlock>
+            </StackPanel>
+        </GroupBox>
+        <GroupBox Header="扫码枪" Grid.Column="1">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="扫码枪A"></TextBlock>
+                    <ComboBox Style="{StaticResource ComboBoxBase}" x:Name="ComA" Text="{Binding ScanAPortCom}" IsEditable="True" IsReadOnly="True" DropDownOpened="ComA_DropDownOpened"></ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="扫码枪B"></TextBlock>
+                    <ComboBox Style="{StaticResource ComboBoxBase}" x:Name="ComB" Text="{Binding ScanBPortCom}" IsEditable="True" IsReadOnly="True" DropDownOpened="ComB_DropDownOpened"></ComboBox>
+                </StackPanel>
+                <TextBlock Text="波特率： 115200&#13;数据位： 8&#13;停止位： 1&#13;奇偶校验： None"></TextBlock>
+            </StackPanel>
+        </GroupBox>
+        <Canvas Grid.Column="1" Grid.Row="1">
+            <Button Canvas.Top="150" Canvas.Right="50" Width="80" Content="保存" FontSize="15" FontFamily="宋体" Command="{mvvm:ActionAuto SaveParameterAction}"></Button>
+        </Canvas>
+    </Grid>
+</UserControl>

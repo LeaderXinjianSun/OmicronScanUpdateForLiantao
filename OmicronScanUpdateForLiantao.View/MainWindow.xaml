@@ -1,0 +1,50 @@
+﻿<metro:MetroWindow x:Class="OmicronScanUpdateForLiantao.View.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:metro ="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"        
+        xmlns:mvvm="clr-namespace:BingLibrary.hjb;assembly=BingLibrary"                   
+        xmlns:local="clr-namespace:OmicronScanUpdateForLiantao.View"
+        mc:Ignorable="d"
+        Title="OmicronScanUpdateForLiantao ver2018012401" Height="600" Width="800" DataContext="{mvvm:Data md}"
+                   WindowStartupLocation="CenterScreen"
+                     BorderThickness="0" GlowBrush="Black" ResizeMode="NoResize" WindowTransitionsEnabled="True"
+                   Loaded="{mvvm:ActionAuto AppLoaded}">
+    <Grid>
+        <Grid.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="SxjDictionary.xaml"></ResourceDictionary>
+                </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition Height="32"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Menu VerticalAlignment="Center">
+            <MenuItem Header="主页" Command="{mvvm:ActionAutoWithParam ChoosePageAction}" CommandParameter="0"></MenuItem>
+            <MenuItem Header="记录" Command="{mvvm:ActionAutoWithParam ChoosePageAction}" CommandParameter="1"></MenuItem>
+            <MenuItem Header="参数" Command="{mvvm:ActionAutoWithParam ChoosePageAction}" CommandParameter="2"></MenuItem>
+        </Menu>
+        <Grid Grid.Row="1" Visibility="{Binding HomePageVisibility,FallbackValue= Visible}">
+            <local:HomePage></local:HomePage>
+        </Grid>
+        <Grid Grid.Row="1" Visibility="{Binding RecordPageVisibility,FallbackValue= Collapsed}">
+            <local:RecordPage></local:RecordPage>
+        </Grid>
+        <Grid Grid.Row="1" Visibility="{Binding ParameterPageVisibility,FallbackValue= Collapsed}">
+            <local:ParameterPage></local:ParameterPage>
+        </Grid>
+        <StatusBar Grid.Row="2">
+            <StatusBarItem>
+                <TextBlock Text="PLC"></TextBlock>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Ellipse Style="{StaticResource PLCConnectStatus}"></Ellipse>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</metro:MetroWindow>
