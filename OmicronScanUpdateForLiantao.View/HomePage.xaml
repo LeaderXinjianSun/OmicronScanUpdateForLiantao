@@ -38,7 +38,7 @@
                 <TextBox Name="textBox1" IsReadOnly="True" MouseDoubleClick="textBox1_MouseDoubleClick" LostFocus="textBox1_LostFocus" Margin="10,0,0,0" VerticalContentAlignment="Center" FontSize="14" Width="100" Text="{Binding JiTaiHao}"></TextBox>
             </StackPanel>
             <Button Canvas.Top="150" Canvas.Right="50" Width="80" Content="工位码" FontSize="15" FontFamily="宋体" Command="{mvvm:ActionAutoWithParam ScanAction}" CommandParameter="0"></Button>
-            <Button Canvas.Top="200" Canvas.Right="50" Width="80" Content="产品码" FontSize="15" FontFamily="宋体"></Button>
+            <Button Canvas.Top="200" Canvas.Right="50" Width="80" Content="产品码" FontSize="15" FontFamily="宋体" Command="{mvvm:ActionAutoWithParam ScanAction}" CommandParameter="1"></Button>
         </Canvas>
         <Canvas Grid.Column="1" Grid.Row="1">
             <StackPanel  Canvas.Top="30" Canvas.Left="20"  Orientation="Vertical">

@@ -9,6 +9,9 @@ using System.ComponentModel.Composition;
 using System.Collections.ObjectModel;
 using SxjLibrary;
 using BingLibrary.hjb.PLC;
+using System.Windows.Threading;
+using System.IO;
+using System.Data;
 
 namespace OmicronScanUpdateForLiantao.ViewModel
 {
@@ -40,6 +43,10 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         ObservableCollection<bool> PlcIn;
         bool[] PlcOut = new bool[64];
         Scan ScanA, ScanB;
+        DispatcherTimer dispatcherTimer = new DispatcherTimer();
+        string LastCleanRecordFlag;
+        List<RecordItem> recordItemList = new List<RecordItem>();
+        object LockObject = new object();
         #endregion
         #region 构造函数
         public MainContext()
@@ -56,6 +63,10 @@ namespace OmicronScanUpdateForLiantao.ViewModel
             ReadParameter();
             ScanA.ini(ScanAPortCom);
             ScanA.Connect();
+            dispatcherTimer.Tick += new EventHandler(DispatcherTimerAction);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
+            ReadRecordFromFile();
+            dispatcherTimer.Start();
         }
         #endregion
         #region 界面功能函数
@@ -122,6 +133,7 @@ namespace OmicronScanUpdateForLiantao.ViewModel
             PLCPortCom = Inifile.INIGetStringValue(ParameterIniPath, "Text", "PLCPortCom", "COM1");
             ScanAPortCom = Inifile.INIGetStringValue(ParameterIniPath, "Text", "ScanAPortCom", "COM1");
             ScanBPortCom = Inifile.INIGetStringValue(ParameterIniPath, "Text", "ScanBPortCom", "COM1");
+            LastCleanRecordFlag = Inifile.INIGetStringValue(ParameterIniPath, "Record", "LastCleanRecordFlag", "123");
         }
         public void SaveParameterAction()
         {
@@ -136,6 +148,9 @@ namespace OmicronScanUpdateForLiantao.ViewModel
                 case "0":
                     ScanA.GetBarCode(ScanActionCallback1);
                     break;
+                case "1":
+                    MsgText = AddMessage(GetBanciDate() + GetBanci());
+                    break;
                 default:
                     break;
             }
@@ -143,6 +158,88 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         private void ScanActionCallback1(string str)
         {
             BarcocdeA = str;
+        }
+        private string GetBanciDate()
+        {
+            string rtstr = "";
+            if (DateTime.Now.Hour >=0 && DateTime.Now.Hour < 8)
+            {
+                rtstr = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+            }
+            else
+            {
+                rtstr = DateTime.Now.ToString("yyyy-MM-dd");
+            }
+            return rtstr;
+        }
+        private string GetBanci()
+        {
+            string rtstr = "";
+            if (DateTime.Now.Hour >= 8 && DateTime.Now.Hour < 20)
+            {
+                rtstr = "D";
+            }
+            else
+            {
+                rtstr = "N";
+            }
+            return rtstr;
+        }
+        private void DispatcherTimerAction(Object sender, EventArgs e)
+        {
+            if (LastCleanRecordFlag != GetBanciDate() + GetBanci())
+            {
+                LastCleanRecordFlag = GetBanciDate() + GetBanci();
+                Inifile.INIWriteValue(ParameterIniPath, "Record", "LastCleanRecordFlag", LastCleanRecordFlag);
+                if (!Directory.Exists("D:\\" + LastCleanRecordFlag))
+                {
+                    Directory.CreateDirectory("D:\\" + LastCleanRecordFlag);
+                }
+            }
+            if (recordItemList.Count > 0)
+            {
+                lock (LockObject)
+                {
+                    foreach (RecordItem item in recordItemList)
+                    {
+                        RecordCollection.Add(item);
+                    }
+                    recordItemList.Clear();
+                }
+            }
+        }
+        private void ReadRecordFromFile()
+        {
+            if (File.Exists("D:\\" + GetBanciDate()+ GetBanci() + "\\" + GetBanciDate() + GetBanci() + ".csv"))
+            {
+                DataTable dt = new DataTable();
+                dt.Columns.Add("日期", typeof(string));
+                dt.Columns.Add("班次", typeof(string));
+                dt.Columns.Add("机台号", typeof(string));
+                dt.Columns.Add("机台穴号", typeof(string));
+                dt.Columns.Add("产品barcode", typeof(string));
+                DataTable dt1 = Csvfile.GetFromCsv("D:\\" + GetBanciDate() + GetBanci() + "\\" + GetBanciDate() + GetBanci() + ".csv", 1, dt);
+                if (dt1.Rows.Count > 0)
+                {
+                    foreach (DataRow item in dt1.Rows)
+                    {
+                        RecordItem ri = new RecordItem();
+                        ri.日期 = item["日期"].ToString();
+                        ri.班次 = item["班次"].ToString();
+                        ri.机台号 = item["机台号"].ToString();
+                        ri.机台穴号 = item["机台穴号"].ToString();
+                        ri.产品barcode = item["产品barcode"].ToString();
+                        lock (LockObject)
+                        {
+                            recordItemList.Add(ri);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MsgText = AddMessage("本地记录不存在");
+            }
         }
         #endregion
         #region 工作
