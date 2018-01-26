@@ -41,7 +41,7 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         string ParameterIniPath = @"C:\Parameter.ini";
         ThingetPLC Xinjie;
         ObservableCollection<bool> PlcIn;
-        bool[] PlcOut = new bool[64];
+        bool[] PlcOut = new bool[8];
         Scan ScanA, ScanB;
         DispatcherTimer dispatcherTimer = new DispatcherTimer();
         string LastCleanRecordFlag;
