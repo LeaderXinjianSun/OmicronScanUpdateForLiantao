@@ -28,8 +28,13 @@
             <Canvas.Background>
                 <ImageBrush ImageSource="Catch(01-25-08-36-48).jpg"></ImageBrush>
             </Canvas.Background>
-            <TextBox Style="{StaticResource BarcodeMainWindowDisp}" Text="{Binding BarcocdeA,FallbackValue=ABCDEFG}" Canvas.Left="130" Canvas.Top="150"></TextBox>
-            <TextBox Style="{StaticResource BarcodeMainWindowDisp}" Text="{Binding BarcocdeB,FallbackValue=HIGKLMN}" Canvas.Left="130" Canvas.Top="250"></TextBox>
+            <Image Source="稿定视觉导出-20180128-113756.png" Canvas.Left="225" Canvas.Top="115">
+                <Image.RenderTransform>
+                    <RotateTransform CenterX="78" CenterY="78" Angle="{Binding RotalAngle}"></RotateTransform>
+                </Image.RenderTransform>
+            </Image>
+            <TextBox Style="{StaticResource BarcodeMainWindowDisp}" Text="{Binding BarcocdeA,FallbackValue=ABCDEFG}" Canvas.Left="130" Canvas.Top="250"></TextBox>
+            <TextBox Style="{StaticResource BarcodeMainWindowDisp}" Text="{Binding BarcocdeB,FallbackValue=HIGKLMN}" Canvas.Left="130" Canvas.Top="300"></TextBox>
         </Canvas>
         <TextBox Grid.Row="1" Margin="5" x:Name="MsgTextBox" IsReadOnly="True" TextChanged="MsgTextBox_TextChanged"  FontSize="14" Background="Black" FontFamily="宋体" Foreground="White" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Text="{Binding MsgText}"></TextBox>
         <Canvas Grid.Column="1">

@@ -34,6 +34,7 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         public virtual string PLCPortCom { set; get; }
         public virtual string ScanAPortCom { set; get; }
         public virtual string ScanBPortCom { set; get; }
+        public virtual double RotalAngle { set; get; }
         #endregion
         #region 变量
         string MessageStr = "";
@@ -47,6 +48,7 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         string LastCleanRecordFlag;
         List<RecordItem> recordItemList = new List<RecordItem>();
         object LockObject = new object();
+        int rol = 0;
         #endregion
         #region 构造函数
         public MainContext()
@@ -243,6 +245,20 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         }
         #endregion
         #region 工作
+        [Initialize]
+        public void Run1()
+        {
+            while (true)
+            {
+                System.Threading.Thread.Sleep(20);
+                rol += 5;
+                if (rol >= 360)
+                {
+                    rol = 0;
+                }
+                RotalAngle = rol;
+            }
+        }
         [Initialize]
         public void PlcRun()
         {
