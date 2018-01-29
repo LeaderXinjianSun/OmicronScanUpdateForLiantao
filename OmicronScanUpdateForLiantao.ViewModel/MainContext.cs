@@ -49,6 +49,7 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         List<RecordItem> recordItemList = new List<RecordItem>();
         object LockObject = new object();
         int rol = 0;
+        double dd8170 = 0, dd4208 = 0;
         #endregion
         #region 构造函数
         public MainContext()
@@ -209,6 +210,7 @@ namespace OmicronScanUpdateForLiantao.ViewModel
                     recordItemList.Clear();
                 }
             }
+            
         }
         private void ReadRecordFromFile()
         {
@@ -246,22 +248,9 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         #endregion
         #region 工作
         [Initialize]
-        public void Run1()
-        {
-            while (true)
-            {
-                System.Threading.Thread.Sleep(20);
-                rol += 5;
-                if (rol >= 360)
-                {
-                    rol = 0;
-                }
-                RotalAngle = rol;
-            }
-        }
-        [Initialize]
         public void PlcRun()
         {
+            bool first = true;
             Random rd = new Random();
             while (true)
             {
@@ -280,12 +269,22 @@ namespace OmicronScanUpdateForLiantao.ViewModel
                             PlcIn = Xinjie.ReadMultiMCoil(1500);
                             Xinjie.WritMultiMCoil(1800, PlcOut);
                             Xinjie.WriteW(150, rd.Next(0, 999).ToString());
+                            dd8170 = Xinjie.ReadD(16554);
+                            dd4208 = Xinjie.ReadD(4208);
+                            RotalAngle = (dd8170 - dd4208) / 91776 * 360;
                         }
                         else
                         {
-                            System.Threading.Thread.Sleep(1000);
-                            MsgText = AddMessage("PLC断线，重新连接...");
+                            if (first)
+                            {
+                                first = false;
+                            }
+                            else
+                            {
+                                MsgText = AddMessage("PLC断线，重新连接...");
+                            }
                             Xinjie.ModbusDisConnect();
+                            System.Threading.Thread.Sleep(1000);
                             Xinjie.ModbusInit(PLCPortCom, 19200, System.IO.Ports.Parity.Even, 8, System.IO.Ports.StopBits.One);
                             Xinjie.ModbusConnect();
                         }
