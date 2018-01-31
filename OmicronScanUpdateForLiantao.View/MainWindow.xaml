@@ -7,7 +7,7 @@
         xmlns:mvvm="clr-namespace:BingLibrary.hjb;assembly=BingLibrary"                   
         xmlns:local="clr-namespace:OmicronScanUpdateForLiantao.View"
         mc:Ignorable="d"
-        Title="OmicronScanUpdateForLiantao ver2018012401" Height="600" Width="800" DataContext="{mvvm:Data md}"
+        Title="OmicronScanUpdateForLiantao ver2018013102" Height="600" Width="800" DataContext="{mvvm:Data md}"
                    WindowStartupLocation="CenterScreen"
                      BorderThickness="0" GlowBrush="Black" ResizeMode="NoResize" WindowTransitionsEnabled="True"
                    Loaded="{mvvm:ActionAuto AppLoaded}">

@@ -39,7 +39,7 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         #region 变量
         string MessageStr = "";
         dialog mydialog = new dialog();
-        string ParameterIniPath = @"C:\Parameter.ini";
+        string ParameterIniPath = @"D:\Parameter.ini";
         ThingetPLC Xinjie;
         ObservableCollection<bool> PlcIn;
         bool[] PlcOut = new bool[8];
@@ -50,6 +50,8 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         object LockObject = new object();
         int rol = 0;
         double dd8170 = 0, dd4208 = 0;
+        string Abarcode, Bbarcode;
+        bool Abarcode_f, Bbarcode_f, Abarcode_s, Bbarcode_s;
         #endregion
         #region 构造函数
         public MainContext()
@@ -66,6 +68,8 @@ namespace OmicronScanUpdateForLiantao.ViewModel
             ReadParameter();
             ScanA.ini(ScanAPortCom);
             ScanA.Connect();
+            ScanB.ini(ScanBPortCom);
+            ScanB.Connect();
             dispatcherTimer.Tick += new EventHandler(DispatcherTimerAction);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
             ReadRecordFromFile();
@@ -137,6 +141,9 @@ namespace OmicronScanUpdateForLiantao.ViewModel
             ScanAPortCom = Inifile.INIGetStringValue(ParameterIniPath, "Text", "ScanAPortCom", "COM1");
             ScanBPortCom = Inifile.INIGetStringValue(ParameterIniPath, "Text", "ScanBPortCom", "COM1");
             LastCleanRecordFlag = Inifile.INIGetStringValue(ParameterIniPath, "Record", "LastCleanRecordFlag", "123");
+            TrigerTimes = int.Parse(Inifile.INIGetStringValue(ParameterIniPath, "Times", "TrigerTimes", "0"));
+            ScanTimes = int.Parse(Inifile.INIGetStringValue(ParameterIniPath, "Times", "ScanTimes", "0"));
+            UpdateTimes = int.Parse(Inifile.INIGetStringValue(ParameterIniPath, "Times", "UpdateTimes", "0"));
         }
         public void SaveParameterAction()
         {
@@ -152,7 +159,7 @@ namespace OmicronScanUpdateForLiantao.ViewModel
                     ScanA.GetBarCode(ScanActionCallback1);
                     break;
                 case "1":
-                    MsgText = AddMessage(GetBanciDate() + GetBanci());
+                    ScanB.GetBarCode(ScanActionCallback2);
                     break;
                 default:
                     break;
@@ -161,6 +168,10 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         private void ScanActionCallback1(string str)
         {
             BarcocdeA = str;
+        }
+        private void ScanActionCallback2(string str)
+        {
+            BarcocdeB = str;
         }
         private string GetBanciDate()
         {
@@ -190,6 +201,11 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         }
         private void DispatcherTimerAction(Object sender, EventArgs e)
         {
+            if (!File.Exists(@"D:\Maintain.csv"))
+            {
+                string[] heads = { "时间", "机台号", "触发次数", "扫码次数", "上传次数" };
+                Csvfile.AddNewLine(@"D:\Maintain.csv", heads);
+            }
             if (LastCleanRecordFlag != GetBanciDate() + GetBanci())
             {
                 LastCleanRecordFlag = GetBanciDate() + GetBanci();
@@ -198,6 +214,15 @@ namespace OmicronScanUpdateForLiantao.ViewModel
                 {
                     Directory.CreateDirectory("D:\\" + LastCleanRecordFlag);
                 }
+                string[] count = { DateTime.Now.ToString(), JiTaiHao, TrigerTimes.ToString(), ScanTimes.ToString(), UpdateTimes.ToString() };
+                Csvfile.AddNewLine(@"D:\Maintain.csv", count);
+                TrigerTimes = 0;
+                ScanTimes = 0;
+                UpdateTimes = 0;
+                Inifile.INIWriteValue(ParameterIniPath, "Times", "TrigerTimes", TrigerTimes.ToString());
+                Inifile.INIWriteValue(ParameterIniPath, "Times", "ScanTimes", ScanTimes.ToString());
+                Inifile.INIWriteValue(ParameterIniPath, "Times", "UpdateTimes", UpdateTimes.ToString());
+                MsgText = AddMessage("记录清空");
             }
             if (recordItemList.Count > 0)
             {
@@ -251,6 +276,7 @@ namespace OmicronScanUpdateForLiantao.ViewModel
         public void PlcRun()
         {
             bool first = true;
+            bool scanFlag = false;
             Random rd = new Random();
             while (true)
             {
@@ -272,6 +298,63 @@ namespace OmicronScanUpdateForLiantao.ViewModel
                             dd8170 = Xinjie.ReadD(16554);
                             dd4208 = Xinjie.ReadD(4208);
                             RotalAngle = (dd8170 - dd4208) / 91776 * 360;
+
+                            //扫码
+                            if (scanFlag != PlcIn[0])
+                            {
+                                scanFlag = PlcIn[0];
+                                if (scanFlag)
+                                {
+                                    Abarcode_f = false;
+                                    Bbarcode_f = false;
+                                    PlcOut[0] = false;
+                                    PlcOut[1] = false;
+                                    PlcOut[2] = false;
+                                    Xinjie.WritMultiMCoil(1800, PlcOut);
+                                    ScanA.GetBarCode(ScanActionCallback1);
+                                    ScanB.GetBarCode(ScanActionCallback2);
+                                    TrigerTimes++;
+                                    Inifile.INIWriteValue(ParameterIniPath, "Times", "TrigerTimes", TrigerTimes.ToString());
+                                }
+                                else
+                                {
+                                    PlcOut[0] = false;
+                                }
+                            }
+                            if (Abarcode_f && Bbarcode_f)
+                            {
+                                Abarcode_f = false;
+                                Bbarcode_f = false;
+                                PlcOut[0] = true;
+                                PlcOut[1] = Abarcode_s;
+                                PlcOut[2] = Bbarcode_s;
+                                if (Abarcode_s && Bbarcode_s)
+                                {
+                                    ScanTimes++;
+                                    Inifile.INIWriteValue(ParameterIniPath, "Times", "ScanTimes", ScanTimes.ToString());
+                                }
+                                RecordItem recordItem = new RecordItem();
+                                recordItem.日期 = GetBanciDate();
+                                recordItem.班次 = GetBanci();
+                                recordItem.机台号 = JiTaiHao;
+                                recordItem.产品barcode = Abarcode;
+                                recordItem.机台穴号 = Bbarcode;
+                                lock (LockObject)
+                                {
+                                    recordItemList.Add(recordItem);
+                                }
+                                if (Directory.Exists("D:\\" + GetBanciDate() + GetBanci()))
+                                {
+                                    string filename = "D:\\" + GetBanciDate() + GetBanci() + "\\" + GetBanciDate() + GetBanci() + ".csv";
+                                    if (File.Exists(filename))
+                                    {
+                                        string[] heads = { "日期", "班次", "机台号", "机台穴号", "产品barcode" };
+                                        Csvfile.AddNewLine(filename, heads);
+                                    }
+                                    string[] count = { recordItem.日期, recordItem.班次, recordItem.机台号, recordItem.机台穴号, recordItem.产品barcode };
+                                    Csvfile.AddNewLine(filename, count);
+                                }
+                            }
                         }
                         else
                         {
@@ -297,6 +380,36 @@ namespace OmicronScanUpdateForLiantao.ViewModel
                     
                 }
             }
+        }
+        private void PLCScanCallback1(string str)
+        {
+            BarcocdeA = Abarcode = str;
+            if (str != "Error")
+            {
+                Abarcode_s = true;
+                MsgText = AddMessage("扫码A成功 " + str);
+            }
+            else
+            {
+                Abarcode_s = false;
+                MsgText = AddMessage("扫码A失败 " + str);
+            }
+            Abarcode_f = true;
+        }
+        private void PLCScanCallback2(string str)
+        {
+            BarcocdeB = Bbarcode = str;
+            if (str != "Error")
+            {
+                Bbarcode_s = true;
+                MsgText = AddMessage("扫码B成功 " + str);
+            }
+            else
+            {
+                Bbarcode_s = false;
+                MsgText = AddMessage("扫码B失败 " + str);
+            }
+            Bbarcode_f = true;
         }
         #endregion
     }
